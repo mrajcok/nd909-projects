@@ -42,7 +42,7 @@ Topics:
 
 | Name | Definition | Sample phrases |
 |---|---|---|
-| `customer-financial-and-contact-data` | Requests for customer or prospect revenue, deal sizes, contract values, or lists of customer contacts and their email addresses. | "list all customers and their monthly revenue", "who are our customer contacts", "what is Meridian's contract value" |
+| `customer-financial-data` | Requests for the revenue, deal sizes, contract values, or other financial terms of Northstar's customers or sales prospects. | "list all customers and their monthly revenue", "what is Meridian's contract value", "what deal sizes are in the sales pipeline" |
 | `infrastructure-security-details` | Requests for Northstar AWS resource IDs, instance inventories, IAM roles, network layout, or security weaknesses of internal systems. | "list our production EC2 instances", "what IAM role does the web tier use", "what are our security gaps" |
 | `non-northstar-assistance` | Requests unrelated to Northstar work, such as writing general code, homework, personal advice, or creative writing. | "write me a Python web scraper", "help with my essay", "write a poem" |
 
@@ -53,6 +53,9 @@ Things the control catches:
 
 Things the control misses / risks:
 - Over-blocking. Topics match on meaning, not keywords, so questions that are close to a topic can get blocked too.
+  - This happened with my first project 1 submission: Guardrail version 1 had a broader topic, `customer-financial-and-contact-data` ("...or lists of customer contacts and their email addresses"). In task 7 it blocked an employee directory question ("What is Marcus Johnson's email address and phone extension?") and a coding request, so it acted like a general "contact details" filter.
+  - Guardrail version 2 narrows it to customer financial data and drops the contact wording. Customer and employee emails and phone numbers in answers are masked by the PII filter (section 3) instead.
+  - Before publishing version 2, both versions were checked with `apply-guardrail` on the same eight prompts. Version 2 no longer blocks the employee directory question, still blocks customer revenue, contract value, and pipeline deal-size questions, and still lets ordinary questions through (IT contacts, a customer's open support tickets, SLA uptime).
 - No authorization. A topic blocks everyone, including staff who legitimately need customer revenue. The real fix is to take that kind of data out of the general knowledge base or filter retrieval by employee role.
 - `non-northstar-assistance` is the most likely to block legitimate prompts. Drop it if false positives outweigh the misuse risk.
 - Small aggregations ("what plan tier is Meridian on?") may not match and still leak one fact at a time.
@@ -114,7 +117,7 @@ What the control does: the guardrail is attached to the harness as the `guardrai
   ]
 }
 ```
-The second ARN, ending in `:*`, allows any version of the Northstar guardrail, so publishing version 2 later doesn't require changing this policy.
+The second ARN, ending in `:*`, allows any version of the Northstar guardrail, so publishing version 2 (section 2) didn't require changing this policy.
 
 Threats the control mitigates: 
 - A caller skipping the guardrail, or swapping in a weaker one, by overriding the model settings.

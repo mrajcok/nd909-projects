@@ -34,11 +34,11 @@ Wow, there are a lot of actions associated with this role!
 | BedrockModelInvocation | `bedrock:InvokeModel`, `bedrock:InvokeModelWithResponseStream` | `arn:aws:bedrock:*::foundation-model/*`, `arn:aws:bedrock:us-east-1:891975886417:*` | Too broad. Allow every foundation model in every Region, plus every Bedrock resource in the account. |
 | BedrockMantleInference | `bedrock-mantle:CreateInference` | `arn:aws:bedrock-mantle:us-east-1:891975886417:*` | Not used |
 | BedrockMantleCallWithBearerToken | `bedrock-mantle:CallWithBearerToken` | `*` | Not used |
-| EcrPublicTokenAccess | `ecr-public:GetAuthorizationToken` | `*` | Runtime. Keep. |
-| StsForEcrPublicPull | `sts:GetServiceBearerToken` | `*` | Runtime. Keep. |
+| EcrPublicTokenAccess | `ecr-public:GetAuthorizationToken` | `*` | Runtime. Keep. `*` is required: this action doesn't support resource-level permissions. |
+| StsForEcrPublicPull | `sts:GetServiceBearerToken` | `*` | Runtime. Keep. `*` is required: this action doesn't support resource-level permissions. |
 | EcrManagedImagePull | `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer`, `ecr:BatchCheckLayerAvailability` | `arn:aws:ecr:us-east-1:*:repository/harness-*` | Runtime. Keep. |
-| EcrManagedImageToken | `ecr:GetAuthorizationToken` | `*` | Runtime. Keep. |
-| XRayTracingAccess | `xray:PutTraceSegments`, `PutTelemetryRecords`, `GetSamplingRules`, `GetSamplingTargets` | `*` | Runtime. Keep the Put actions. |
+| EcrManagedImageToken | `ecr:GetAuthorizationToken` | `*` | Runtime. Keep. `*` is required: this action doesn't support resource-level permissions. |
+| XRayTracingAccess | `xray:PutTraceSegments`, `PutTelemetryRecords`, `GetSamplingRules`, `GetSamplingTargets` | `*` | Runtime. Keep the Put actions; `*` is required, since they don't support resource-level permissions. |
 | CloudWatchLogsGroup | `logs:CreateLogGroup`, `logs:DescribeLogStreams` | `log-group:/aws/bedrock-agentcore/runtimes/*` | Too broad. Allows every runtime's log group, not just Northstar's. |
 | CloudWatchLogsDescribeGroups | `logs:DescribeLogGroups` | `log-group:*` | Too broad. Lists every log group in the account. |
 | CloudWatchLogsStream | `logs:CreateLogStream`, `logs:PutLogEvents` | `log-group:/aws/bedrock-agentcore/runtimes/*:log-stream:*` | Too broad. Lets harness write into other runtimes' logs (for example `harness_VantageAria-*`). |
@@ -140,6 +140,7 @@ What changed, and what didn't:
 - Models: one model/inference profile for Haiku 4.5, plus the two ARNs that `get-inference-profile` lists for it.
 - Gateway: unchanged, one ARN.
 - Logs: narrowed from every runtime to `harness_NorthstarAssist-*`. `DescribeLogGroups` on `*` and `PutResourcePolicy` dropped.
+- Runtime image and telemetry: the `RuntimeImageAndTelemetry` statement keeps `Resource: "*"` because none of its actions (`ecr-public:GetAuthorizationToken`, `sts:GetServiceBearerToken`, `ecr:GetAuthorizationToken`, `xray:PutTraceSegments`, `xray:PutTelemetryRecords`) support resource-level permissions, so IAM accepts only `*` for them. They let the harness runtime get tokens to pull its container image and send X-Ray traces; they don't grant access to any data. The image-pull actions that do support ARNs (`ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer`, `ecr:BatchCheckLayerAvailability`) stay scoped to `repository/harness-*`.
 - Removed: `bedrock-mantle`, `cloudwatch:PutMetricData`, `xray:GetSampling*`, Browser, Code Interpreter, EFS, S3 Files, Memory, and model invocation on every other model and account resource.
 - No S3 and no Retrieve: the harness only reaches the knowledge base through the gateway.
 
