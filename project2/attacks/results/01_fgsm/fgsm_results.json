@@ -1,0 +1,44 @@
+[
+  {
+    "epsilon": 0.0,
+    "clean_accuracy": 0.9435897435897436,
+    "adversarial_accuracy": 0.9435897435897436,
+    "attack_success_rate": 0.0,
+    "total_samples": 390
+  },
+  {
+    "epsilon": 0.01,
+    "clean_accuracy": 0.9435897435897436,
+    "adversarial_accuracy": 0.8076923076923077,
+    "attack_success_rate": 0.14402173913043478,
+    "total_samples": 390
+  },
+  {
+    "epsilon": 0.03,
+    "clean_accuracy": 0.9435897435897436,
+    "adversarial_accuracy": 0.5102564102564102,
+    "attack_success_rate": 0.4592391304347826,
+    "total_samples": 390
+  },
+  {
+    "epsilon": 0.05,
+    "clean_accuracy": 0.9435897435897436,
+    "adversarial_accuracy": 0.3,
+    "attack_success_rate": 0.6820652173913043,
+    "total_samples": 390
+  },
+  {
+    "epsilon": 0.1,
+    "clean_accuracy": 0.9435897435897436,
+    "adversarial_accuracy": 0.2717948717948718,
+    "attack_success_rate": 0.7119565217391305,
+    "total_samples": 390
+  },
+  {
+    "epsilon": 0.15,
+    "clean_accuracy": 0.9435897435897436,
+    "adversarial_accuracy": 0.4461538461538462,
+    "attack_success_rate": 0.5271739130434783,
+    "total_samples": 390
+  }
+]
