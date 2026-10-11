@@ -1,2 +1,4 @@
 .env
 rag_chatbot/.env
+__pycache__/
+*.pyc
