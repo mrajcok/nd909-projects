@@ -20,10 +20,6 @@
 
 ## Visual Evidence
 
-<!-- visualize_fgsm() saves one PNG per epsilon under attacks/results/01_fgsm/.
-     Embed each one below and add a sentence on what you notice at that epsilon
-     (e.g. when noise becomes visible, when the prediction flips). -->
-
 All six images use `openimages_0000`, a photo of a car (true label: non_receipt). The clean model is very confident it's not a receipt (0.004).
 
 ![FGSM epsilon 0.000](../attacks/results/01_fgsm/fgsm_results_openimages_0000_0.png)

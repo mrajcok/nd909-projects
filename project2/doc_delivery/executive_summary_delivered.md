@@ -32,9 +32,9 @@ Most of the fixes are inexpensive, and the most serious one can be made within a
 
 **Business Impact:** The chatbot runs with full administrative rights, and its server includes tools an attacker could use to download malicious software or move data out. On their own, these settings do not cause a breach. If the chatbot is compromised, however, they turn a contained incident into a much more serious one.
 
-### 4. Training Data Can Be Corrupted to Weaken Fraud Detection — MEDIUM
+### 4. Training Data Can Be Corrupted to Weaken the Classifier — MEDIUM
 
-**Business Impact:** Someone who can change the training data can quietly weaken the classifier. Mislabeling fewer than 5% of the training images made the classifier accept about 1 in 5 non-receipts, compared with almost none before. Overall accuracy changed only modestly, so this kind of tampering could go unnoticed. The risk is rated MEDIUM because the attacker would need inside access to the training process.
+**Business Impact:** Someone who can change the training data can quietly weaken the classifier without altering a single image. Mislabeling 8% of the training images caused the classifier to wrongly reject about 1 in 6 genuine receipts, up from about 1 in 25. That means legitimate claims are denied or sent to manual review, reimbursements are delayed, and employees lose trust in the system. Which kind of error increases depends on which images are mislabeled, so the same technique could instead be used to let non-receipts through. The risk is rated MEDIUM because the attacker would need inside access to the training process.
 
 ### 5. Chatbot Can Be Manipulated Into Ignoring Its Rules — MEDIUM
 

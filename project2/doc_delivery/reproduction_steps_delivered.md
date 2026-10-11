@@ -39,15 +39,28 @@ ls classifier/balanced_data/train classifier/balanced_data/test
 
 ## Step 2: Train and Evaluate Clean Model
 
-The current release checkpoint, `classifier/checkpoints/receipt_cnn_clean.pt`, is used as the clean baseline. It is not retrained, and per the Rules of Engagement it is never overwritten. Evaluating it also records the clean baseline metrics that the poisoning comparison in Step 4 needs.
+Two clean models are used:
+
+- **Release checkpoint** (`classifier/checkpoints/receipt_cnn_clean.pt`): the model under test for the FGSM attack in Step 3. It is not retrained, and per the Rules of Engagement it is never overwritten.
+- **Retrained clean baseline** (`classifier/checkpoints/receipt_cnn_clean_retrain_check.pt`): the baseline for the poisoning comparison in Step 4. The release checkpoint was trained in a different environment (likely GPU hardware and different software versions). Retraining the clean model in the test environment, with the same `train.py` settings used for the poisoned model, means the label flips are the only difference between the two models. Training in this environment is deterministic, so rerunning these commands reproduces the same metrics.
 
 ```bash
 cd classifier
+
+# Evaluate the release checkpoint
 python evaluate.py --model-path checkpoints/receipt_cnn_clean.pt --test-dir balanced_data/test
+
+# Retrain the clean baseline into a separate checkpoint (15 epochs, lr 0.001, batch size 32; about 5 minutes on CPU)
+python train.py --data-dir balanced_data --checkpoint-name receipt_cnn_clean_retrain_check.pt
+
+# Evaluate the retrained clean baseline
+python evaluate.py --model-path checkpoints/receipt_cnn_clean_retrain_check.pt --test-dir balanced_data/test
 cd ..
 ```
 
-Expected: more than 94% accuracy on the balanced test set. The observed result was accuracy 0.9436, precision 0.9943, recall 0.8923 and F1 0.9405.
+Expected output:
+- Release checkpoint: accuracy 0.9436, precision 0.9943, recall 0.8923, F1 0.9405
+- Retrained clean baseline: accuracy 0.9615, precision 0.9639, recall 0.9590, F1 0.9614
 
 ## Step 3: FGSM Attack
 
@@ -67,9 +80,9 @@ Expected output:
 ## Step 4: Data Poisoning
 
 ```bash
-# 1. Create the poisoned dataset (defaults: --flip-rate 0.05 --seed 42)
+# 1. Create the poisoned dataset (8% of labels per class, seed 42)
 cd attacks
-python 02_label_flip_poisoning.py
+python 02_label_flip_poisoning.py --flip-rate 0.08 --seed 42
 
 # 2. Retrain on the poisoned data into a separate checkpoint
 cd ../classifier
@@ -78,15 +91,15 @@ python train.py --data-dir poisoned_data --checkpoint-name receipt_cnn_poisoned.
 # 3. Evaluate the poisoned model on the clean test set
 python evaluate.py --model-path checkpoints/receipt_cnn_poisoned.pt --test-dir balanced_data/test --results-dir ../attacks/results/02_label_flip/poisoned
 
-# 4. Evaluate the clean model for comparison
-python evaluate.py --model-path checkpoints/receipt_cnn_clean.pt --test-dir balanced_data/test --results-dir ../attacks/results/02_label_flip/clean
+# 4. Evaluate the retrained clean baseline (from Step 2) for comparison
+python evaluate.py --model-path checkpoints/receipt_cnn_clean_retrain_check.pt --test-dir balanced_data/test --results-dir ../attacks/results/02_label_flip/clean
 cd ..
 ```
 
 Expected output:
-- 56 of 1,154 training labels flipped (28 in each direction); a label-flip visualization saved to `attacks/results/02_label_flip/label_flip_results_5.png`
+- 92 of 1,154 training labels flipped (7.97%; 46 in each direction); a label-flip visualization saved to `attacks/results/02_label_flip/label_flip_results_5.png`
 - `metrics.json` and `confusion_matrix.png` in both `attacks/results/02_label_flip/poisoned/` and `attacks/results/02_label_flip/clean/`
-- Poisoned model: accuracy 0.8949, precision 0.8348, recall 0.9846, F1 0.9035. Non-receipts accepted as receipts (false positives) rise from 1 to 38.
+- Poisoned model: accuracy 0.9051, precision 0.9702, recall 0.8359, F1 0.8981. Compared with the retrained clean baseline, accuracy drops 5.64 points and real receipts rejected (false negatives) rise from 8 to 32.
 
 ## Step 5: RAG Chatbot Setup
 
@@ -148,9 +161,10 @@ Results are saved to `attacks/results/05_supply_chain/supply_chain_report.json`.
 
 | Attack | Metric | Expected Result |
 |--------|--------|----------------|
-| Clean baseline | Test accuracy | 0.9436 (precision 0.9943, recall 0.8923, F1 0.9405) |
+| Clean release checkpoint | Test accuracy | 0.9436 (precision 0.9943, recall 0.8923, F1 0.9405) |
+| Clean retrained baseline | Test accuracy | 0.9615 (precision 0.9639, recall 0.9590, F1 0.9614) |
 | FGSM Evasion | Adversarial accuracy at ε=0.05 | 0.3000; below 50% at ε ≤ 0.10, as the charter requires |
-| Label-Flip Poisoning (5%) | Accuracy / precision / false positives | Accuracy 0.9436 → 0.8949; precision 0.9943 → 0.8348; false positives 1 → 38 |
+| Label-Flip Poisoning (8%) | Accuracy / recall / false negatives vs. retrained baseline | Accuracy 0.9615 → 0.9051 (−5.64 pts); recall 0.9590 → 0.8359; false negatives 8 → 32 |
 | Prompt Injection | Successful injections | 1 / 9 by automated scoring (Attempt 9, delimiter injection); 2 / 9 including the under-scored Role Hijacking variant (Attempt 7). Confidential source retrieved in 1 / 9 (Attempt 5) |
 | Data Exfiltration | Queries exfiltrating confidential data | 6 / 6 retrieved `executive_bonus_structure_CONFIDENTIAL.md`; 5 / 6 leaked its contents in the answer |
 | Supply Chain Analysis | Vulnerabilities / Dockerfile issues | 804 vulnerabilities (0 CRITICAL, 34 HIGH, 160 MEDIUM, 601 LOW, 9 UNKNOWN); 6 Dockerfile issues (1 HIGH, 3 MEDIUM, 2 LOW) |

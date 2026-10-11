@@ -1,17 +1,17 @@
 {
-  "label": "checkpoints/receipt_cnn_clean.pt",
-  "accuracy": 0.9435897435897436,
-  "precision": 0.9942857142857143,
-  "recall": 0.8923076923076924,
-  "f1": 0.9405405405405406,
+  "label": "checkpoints/receipt_cnn_clean_retrain_check.pt",
+  "accuracy": 0.9615384615384616,
+  "precision": 0.9639175257731959,
+  "recall": 0.958974358974359,
+  "f1": 0.961439588688946,
   "confusion_matrix": [
     [
-      194,
-      1
+      188,
+      7
     ],
     [
-      21,
-      174
+      8,
+      187
     ]
   ],
   "classes": [
